@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>YunRoaster Control Interface</title>
+
+   <style>
+      body {
+        text-align: center;
+      }
+      
+      #g1, #g2, #g3 {
+        width:200px; height:160px;
+        display: inline-block;
+        margin: 1em;
+      }
+      
+      p {
+        display: block;
+        width: 450px;
+        margin: 2em auto;
+        text-align: left;
+      }
+    </style>
+    <!--
+ 	<script type="text/javascript" src="zepto.min.js"></script>
+	-->
+    <script src="raphael.2.1.0.min.js"></script>
+    <script src="justgage.1.0.1.min.js"></script>
+    <script>
+      var g1, g2, g3;
+      
+      window.onload = function(){
+        var g1 = new JustGage({
+          id: "g1", 
+          value: getRandomInt(0, 100), 
+          min: 0,
+          max: 100,
+          title: "Power",
+          label: "Percent"
+        });
+        
+        var g2 = new JustGage({
+          id: "g2", 
+          value: 400, 
+          min: 32,
+          max: 550,
+          title: "Bean Temp",
+          label: "Degrees F"
+        });
+        
+        var g3 = new JustGage({
+          id: "g3", 
+          value: 120, 
+          min: 32,
+          max: 550,
+          title: "Env. Temp",
+          label: "Degrees F"
+        });
+        
+        setInterval(function() {
+		  g1.refresh(getRandomInt(0, 100));
+          g2.refresh(getRandomInt(32, 550));          
+          g3.refresh(getRandomInt(32, 550));
+        },2500);      
+      };
+    </script>
+    <!--
+  <script type="text/javascript">
+	   	function refresh() {
+		  	$('#content').load('/arduino/temperature');
+
+	  	}
+     </script>
+   -->
+
+	</head>
+	<!--
+	<body onload="setInterval(refresh, 2000);">
+	-->
+	<body>
+	<!--
+	<span id="content">0</span>	
+	-->
+	<div id="g1"></div>
+    <div id="g2"></div>
+    <div id="g3"></div>
+    <p>
+    This looks just like the template...
+    </p>
+		
+	</body>
+</html>
+
