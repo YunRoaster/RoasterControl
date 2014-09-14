@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 	<head>
-	<title>YunRoaster Control Interface</title>
+	<title>YunRoaster Control Interface V 0.0d</title>
+
 
    <style>
       body {
@@ -20,8 +21,12 @@
         margin: 2em auto;
         text-align: left;
       }
-    </style>
+    </style>    
+
  	<script type="text/javascript" src="zepto.min.js"></script>
+ 	
+ 	
+ 	
     <script src="raphael.2.1.0.min.js"></script>
     <script src="justgage.1.0.1.min.js"></script>
     <script>
@@ -54,15 +59,15 @@
           title: "Env. Temp",
           label: "Degrees F"
         });
-  <!--      
+      
         setInterval(function() {
 		  g1.refresh(getRandomInt(0, 100));
           g2.refresh(getRandomInt(32, 550));          
           g3.refresh(getRandomInt(32, 550));
-        },2500);   
-        -->   
+        },2500);     
       };
     </script>
+
   <script type="text/javascript">
 	   	function refresh() {
 		  	$('#content').load('/arduino/temperature');
@@ -71,9 +76,10 @@
      </script>
 
 	</head>
-
-<!--	<body onload="setInterval(refresh, 2000);"> -->
-    <body>
+<!-- if you replace the <body> tag with the following line, you get text and no gauges
+if you use a regualr <body> without this, you get gauges with no text -->
+	<body onload="setInterval(refresh, 2000);">  
+ <!--   <body> -->
 	<span id="content">0</span>	
 
 	<div id="g1"></div>
@@ -81,9 +87,9 @@
     <div id="g3"></div>
     <p>
     This looks just like the template...
-    </p>
+    </p>  
 		
-		refresh
+		
 	</body>
 </html>
 
