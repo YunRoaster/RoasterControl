@@ -141,21 +141,52 @@ void setup() {
   }
 }
 
-void loop() {
+void loop() 
+{
   // Get clients coming from server
   YunClient client = server.accept();
 
   // There is a new client?
-  if (client) {
+  if (client)
+  {
     // read the command
     String command = client.readString();
     command.trim();        //kill whitespace
     Serial.println(command);
-    // is "temperature" command?
-    if (command == "temperature") {
-//First, we'll get/read all the data.
-//Then, write out a formatted CSV string with important variables
-//The, write out human-readable text with embedde variables
+    // is "CSVData" the command?
+    if (command == "CSVData")
+    {
+
+      display_time = millis() - start_time;
+      int sensorValue = analogRead(A1);
+      // convert the reading to millivolts:
+      float voltage = sensorValue *  (5000 / 1024);
+      // convert the millivolts to temperature celsius:
+      float temperature0 = (voltage - 500) / 10;
+      // convert to degrees F
+      temperature0 = (temperature0 * 1.8) + 32.0;
+
+      // **** Read MAX6675 using native library instead of Arduino SPI
+      // Read the temp from the MAX6675
+      temperature1 = temp1.read_temp();
+
+      temperature2 = temp2.read_temp();
+
+      //Now, write out the CSV string with Time, temp0, temp1, temp2
+      client.print(display_time);
+      client.print(", ");
+      client.print(temperature0);
+      client.print(", ");
+      client.print(temperature1);
+      client.print(", ");
+      client.println(temperature2);
+
+    }
+    else if (command == "temperature")
+    {
+      //First, we'll get/read all the data.
+      //Then, write out a formatted CSV string with important variables
+      //The, write out human-readable text with embedde variables
 
       // get the time from the server:
       /* Let's get this out of the loop: maybe load it up once at initialization
@@ -167,7 +198,7 @@ void loop() {
         timeString += c;
       }
       //Serial.println(timeString);  */
-      
+
       display_time = millis() - start_time;
       int sensorValue = analogRead(A1);
       // convert the reading to millivolts:
@@ -184,43 +215,36 @@ void loop() {
 
       temperature2 = temp2.read_temp();
 
-//Now, write out the CSV string with Time, temp0, temp1, temp2
-      client.print(display_time);
-      client.print(", ");
-      client.print(temperature0);
-      client.print(", ");
-      client.print(temperature1);
-      client.print(", ");
-      client.println(temperature2);
-      client.print("<br>");
-
-
       // print the other information:
-//      client.print("Current time on the Yún: ");
-//      client.println(timeString);
+      client.print("Current display time ");
+      client.println(display_time);
       client.print("<br>Current TMP36 temperature: ");
       client.print(temperature0);
       client.print(" degrees F");
-      if (temperature1 < 0) {
+      if (temperature1 < 0)
+      {
         // If there is an error with the TC, temperature will be < 0
         client.print("<br>Thermocouple 1 Error on CS");
         client.print( temperature1 );
         client.print(" degrees F");
         digitalWrite(TC_LED, HIGH);
-      } else {
+      } else
+      {
         client.print("<br>Current TC1 Temperature: ");
         client.print( temperature1 );
         client.print(" degrees F");
         digitalWrite(TC_LED, LOW);
       }
 
-      if (temperature2 < 0) {
+      if (temperature2 < 0)
+      {
         // If there is an error with the TC, temperature will be < 0
         client.print("<br>Thermocouple 2 Error on CS");
         client.print( temperature2 );
         client.print(" degrees F");
         digitalWrite(TC_LED, HIGH);
-      } else {
+      } else
+      {
         client.print("<br>Current TC2 Temperature: ");
         client.print( temperature2 );
         client.print(" degrees F");
@@ -233,6 +257,8 @@ void loop() {
       client.print(startString);
       client.print("<br>Hits so far: ");
       client.print(hits);
+
+
     }
 
     // Close connection and free resources.
@@ -242,6 +268,5 @@ void loop() {
 
   delay(50); // Poll every 50ms
 }
-
 
 
