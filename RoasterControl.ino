@@ -52,6 +52,9 @@
 
 int duty_cycle = 800;
 String TCstring;
+static unsigned long start_time = millis();
+static unsigned long display_time;
+
 
 int TC_LED = 9; // Status LED Pin
 //int CS = 10; // CS pin on MAX6675  --we use THERMOCUOPELX_CS for this
@@ -61,27 +64,16 @@ int THERMOCOUPLE2_CS = 8;
 int SO = 12; // SO pin of MAX6675
 int CK = 13; // SCK pin of MAX6675
 int units = 2; // Units to readout temp (0 = raw, 1 = ˚C, 2 = ˚F)
-float temperature = 0.0; // Temperature output variable
+float temperature0 = 0.0; // Temperature output variable
+float temperature1 = 0.0; // Temperature output variable
+float temperature2 = 0.0; // Temperature output variable
+
 // Initialize the MAX6675 Library for our chip
 // MAX6675 temp(THERMOCOUPLE1_CS, SO, CK, units);
 MAX6675 temp1(THERMOCOUPLE1_CS, SO, CK, units);
 MAX6675 temp2(THERMOCOUPLE2_CS, SO, CK, units);
 
 
-/*
-unsigned int readThermocouple(const int chipSelectPin)
-{
-  unsigned int value;
-  cli();
-  digitalWrite(chipSelectPin, LOW);
-  value = SPI.transfer(0x00);
-  value <<= 8;
-  value |= SPI.transfer(0x00);
-  digitalWrite(chipSelectPin, HIGH);
-  sei();
-  return (value & 0x7fff) >> 3;
-}
-*/
 
 void slowPWM(const int duty_cycle)
 {
@@ -161,8 +153,12 @@ void loop() {
     Serial.println(command);
     // is "temperature" command?
     if (command == "temperature") {
+//First, we'll get/read all the data.
+//Then, write out a formatted CSV string with important variables
+//The, write out human-readable text with embedde variables
 
       // get the time from the server:
+      /* Let's get this out of the loop: maybe load it up once at initialization
       Process time;
       time.runShellCommand("date");
       String timeString = "";
@@ -170,49 +166,67 @@ void loop() {
         char c = time.read();
         timeString += c;
       }
-      Serial.println(timeString);
+      //Serial.println(timeString);  */
+      
+      display_time = millis() - start_time;
       int sensorValue = analogRead(A1);
       // convert the reading to millivolts:
       float voltage = sensorValue *  (5000 / 1024);
       // convert the millivolts to temperature celsius:
-      float temperature = (voltage - 500) / 10;
-      // print the temperature:
-      client.print("Current time on the Yún: ");
-      client.println(timeString);
-      client.print("<br>Current TMP36 temperature: ");
-      client.print(temperature);
-      client.print(" degrees C");
+      float temperature0 = (voltage - 500) / 10;
+      // convert to degrees F
+      temperature0 = (temperature0 * 1.8) + 32.0;
 
 
       // **** Read MAX6675 using native library instead of Arduino SPI
       // Read the temp from the MAX6675
-      temperature = temp1.read_temp();
-      if (temperature < 0) {
+      temperature1 = temp1.read_temp();
+
+      temperature2 = temp2.read_temp();
+
+//Now, write out the CSV string with Time, temp0, temp1, temp2
+      client.print(display_time);
+      client.print(", ");
+      client.print(temperature0);
+      client.print(", ");
+      client.print(temperature1);
+      client.print(", ");
+      client.println(temperature2);
+      client.print("<br>");
+
+
+      // print the other information:
+//      client.print("Current time on the Yún: ");
+//      client.println(timeString);
+      client.print("<br>Current TMP36 temperature: ");
+      client.print(temperature0);
+      client.print(" degrees F");
+      if (temperature1 < 0) {
         // If there is an error with the TC, temperature will be < 0
         client.print("<br>Thermocouple 1 Error on CS");
-        client.println( temperature );
+        client.print( temperature1 );
         client.print(" degrees F");
         digitalWrite(TC_LED, HIGH);
       } else {
         client.print("<br>Current TC1 Temperature: ");
-        client.println( temperature );
+        client.print( temperature1 );
         client.print(" degrees F");
         digitalWrite(TC_LED, LOW);
       }
 
-      temperature = temp2.read_temp();
-      if (temperature < 0) {
+      if (temperature2 < 0) {
         // If there is an error with the TC, temperature will be < 0
         client.print("<br>Thermocouple 2 Error on CS");
-        client.println( temperature );
+        client.print( temperature2 );
         client.print(" degrees F");
         digitalWrite(TC_LED, HIGH);
       } else {
         client.print("<br>Current TC2 Temperature: ");
-        client.println( temperature );
+        client.print( temperature2 );
         client.print(" degrees F");
         digitalWrite(TC_LED, LOW);
       }
+
 
 
       client.print("<br>This sketch has been running since ");
