@@ -23,17 +23,17 @@
       }
     </style>    
 
- 	<script type="text/javascript" src="zepto.min.js"></script>
- 	
- 	
- 	
+ 	  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="raphael.2.1.0.min.js"></script>
     <script src="justgage.1.0.1.min.js"></script>
     <script>
+      // If url contains 'test' we're in test mode
+      var isTest = Boolean(window.location.search.match(/test/));
+
       var g1, g2, g3;
       
       window.onload = function(){
-        var g1 = new JustGage({
+        g1 = new JustGage({
           id: "g1", 
           value: getRandomInt(0, 100), 
           min: 0,
@@ -42,7 +42,7 @@
           label: "Percent"
         });
         
-        var g2 = new JustGage({
+        g2 = new JustGage({
           id: "g2", 
           value: 400, 
           min: 32,
@@ -51,7 +51,7 @@
           label: "Degrees F"
         });
         
-        var g3 = new JustGage({
+        g3 = new JustGage({
           id: "g3", 
           value: 120, 
           min: 32,
@@ -60,36 +60,52 @@
           label: "Degrees F"
         });
       
-        setInterval(function() {
-		  g1.refresh(getRandomInt(0, 100));
-          g2.refresh(getRandomInt(32, 550));          
-          g3.refresh(getRandomInt(32, 550));
-        },2500);     
       };
+
+
+      function refresh() {
+        var content;
+        if(isTest) {
+          // Don't query the arduinio url, just generate fake data
+          content = new $.Deferred();
+          setTimeout(function(){
+            var randData = [getRandomInt(0, 100), getRandomInt(32, 550), getRandomInt(32, 550)];
+            var CSVdata = randData.join(",") + "\n";
+            content.resolve(CSVdata);
+          }, 0);
+        } else {
+          content = $.get('/arduino/temperature', {})
+        }
+        
+        content.then(handleData);
+      }
+
+      function handleData(data_string) {
+        // Format the data
+        // Split by commas and newlines, and remove last blank entry
+        var data = data_string.split(/[,\n]/);
+        data = data.slice(0, data.length - 1);
+        //console.log(data)
+
+        // Update gauges
+        g1.refresh(data[0]);
+        g2.refresh(data[1]);
+        g3.refresh(data[2]);
+      }
+
     </script>
-
-  <script type="text/javascript">
-	   	function refresh() {
-		  	$('#content').load('/arduino/temperature');
-
-	  	}
-     </script>
 
 	</head>
 <!-- if you replace the <body> tag with the following line, you get text and no gauges
 if you use a regualr <body> without this, you get gauges with no text -->
 	<body onload="setInterval(refresh, 2000);">  
- <!--   <body> -->
-	<span id="content">0</span>	
-
-	<div id="g1"></div>
+  <!--   <body> -->
+    <div id="g1"></div>
     <div id="g2"></div>
     <div id="g3"></div>
     <p>
     This looks just like the template...
-    </p>  
-		
-		
+    </p>
 	</body>
 </html>
 
