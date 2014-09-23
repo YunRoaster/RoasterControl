@@ -6,31 +6,82 @@
 
    <style>
       body {
+        font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
         text-align: center;
       }
-      
+
+      /* Gauges */ 
       #g1, #g2, #g3 {
         width:200px; height:160px;
         display: inline-block;
         margin: 1em;
       }
       
-      p {
-        display: block;
-        width: 450px;
-        margin: 2em auto;
-        text-align: left;
+      /* Line plot */
+      #chart_container {
+        display: inline-block;
+        font-family: Arial, Helvetica, sans-serif;
       }
-    </style>    
+      #chart {
+        float: left;
+      }
+      #legend {
+        float: left;
+        margin-left: 15px;
+      }
+      #y_axis {
+        float: left;
+        width: 40px;
+      }
+      #y_axis svg {
+        height: 265px;
+      }
+
+      .rickshaw_legend .swatch {
+        float: right;
+      }
+      .rickshaw_legend .label {
+        float: left;
+      }
+
+      /* Table */
+      #dataPointTable {
+        display: inline-block;
+      }
+
+      th, td {
+        border: 1px solid black;
+      }
+
+    </style>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/rickshaw/1.4.6/rickshaw.min.css">
 
  	  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="raphael.2.1.0.min.js"></script>
     <script src="justgage.1.0.1.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/rickshaw/1.4.6/rickshaw.min.js"></script>
+    <script src="plot.js"></script>
     <script>
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
 
       var g1, g2, g3;
+
+      var time_plot,
+          time_plot_ready = false,
+          table_ready = false,
+          sample_num = 0,
+          maxRows = 25;
+
+      // Config for random data
+      var currentData = {
+        'date': +new Date(),
+        'power': 50,
+        'bean': 75,
+        'env': 75
+      };
+      var randomValitity = 0.3;
       
       window.onload = function(){
         g1 = new JustGage({
@@ -59,7 +110,11 @@
           title: "Env. Temp",
           label: "Degrees F"
         });
-      
+
+        // Initialize table
+        $tableBody = $("#dataPointTable tbody");
+        $("#nSampleDisplay").html(maxRows);
+        table_ready = true;
       };
 
 
@@ -69,7 +124,20 @@
           // Don't query the arduinio url, just generate fake data
           content = new $.Deferred();
           setTimeout(function(){
-            var randData = [+new Date(), getRandomInt(0, 100), getRandomInt(32, 550), getRandomInt(32, 550)];
+            currentData = {
+              'date': +new Date(),
+              'power': randomChange(currentData.power),
+              'bean': randomChange(currentData.bean),
+              'env': randomChange(currentData.env)
+            };
+
+            // Cast to array
+            var randData = [];
+            for(var key in currentData) {
+                randData.push(currentData[key]);
+            }
+
+            // Format as string
             var CSVdata = randData.join(",") + "\n";
             content.resolve(CSVdata);
           }, 0);
@@ -80,18 +148,60 @@
         content.then(handleData);
       }
 
+      function randomChange(old) {
+        return old * (1 + (0.5 - Math.random()) * randomValitity);
+      }
+
+      function roundToPrecision(v, ndigits) {
+        ndigits = ndigits !== undefined ? ndigits : 2;
+        var roundVal = Math.pow(10, ndigits);
+        return Math.round(v*roundVal)/roundVal;
+      }
+
       function handleData(data_string) {
         // Format the data
         // Split by commas and newlines, and remove last blank entry
         var data = data_string.split(/[,\n]/);
         data = data.slice(0, data.length - 1);
-        //console.log(data)
+
+        // Round values
+        data[1] = roundToPrecision(data[1]);
+        data[2] = roundToPrecision(data[2]);
+        data[3] = roundToPrecision(data[3]);
 
         // Update gauges
         var time = data[0];
         g1.refresh(data[1]);
         g2.refresh(data[2]);
         g3.refresh(data[3]);
+
+        // Update time plot
+        if(time_plot_ready) {
+          time_plot.series.addData({
+            'power': data[1],
+            'bean': data[2],
+            'env': data[3]
+          });
+          time_plot.render();
+        }
+
+        // Add table entry
+        addTableRow(data);
+      }
+
+      // Keep the number of rows shown maxed at 'maxRows'
+      function addTableRow(data){
+        if (!table_ready) return;
+        var newRow = "<tr><td>" 
+                    + (++sample_num) + "</td><td>" 
+                    + data[1] + "</td><td>" 
+                    + data[2] + "</td><td>" 
+                    + data[3] + "</td></tr>";
+        $tableBody.append(newRow);
+        var nRows = $tableBody.find("tr").length;
+        if (nRows > maxRows) {
+          $tableBody.find("tr:nth-child(-n+" + (nRows-maxRows) + ")").remove();
+        }
       }
 
     </script>
@@ -104,9 +214,28 @@ if you use a regualr <body> without this, you get gauges with no text -->
     <div id="g1"></div>
     <div id="g2"></div>
     <div id="g3"></div>
-    <p>
-    This looks just like the template...
-    </p>
+    <hr/>
+    <h2>Time series</h2>
+    <div id="chart_container">
+            <div id="y_axis"></div>
+            <div id="chart"></div>
+            <div id="legend"></div>
+    </div>
+    <hr/>
+    <h2>Last <span id="nSampleDisplay">X</span> Data points</h2>
+    <table id="dataPointTable">
+      <thead>
+        <tr>
+          <th>Sample #</th>
+          <th>Power (%)</th>
+          <th>Bean Temp (F)</th>
+          <th>Env Temp (F)</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
 	</body>
 </html>
 
