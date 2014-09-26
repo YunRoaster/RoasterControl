@@ -4,12 +4,22 @@
 	<title>YunRoaster Control Interface V 0.0d</title>
    <meta charset="utf-8">
    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/rickshaw/1.4.6/rickshaw.min.css">
+   <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
    <style>
       body {
         font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
         text-align: center;
       }
 
+      /* Power control */
+      #powerControl {
+        font-size: 2em;
+        font-weight: bold;
+      }
+      #powerControl > span {
+        width: 150px;
+      }
+      
       /* Gauges */ 
       #g1, #g2, #g3 {
         width: 200px;
@@ -64,6 +74,7 @@
     <script src="justgage.1.0.1.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/rickshaw/1.4.6/rickshaw.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
     <script src="plot.js"></script>
     <script>
       // If url contains 'test' we're in test mode
@@ -118,6 +129,13 @@
         $tableBody = $("#dataPointTable tbody");
         $("#nSampleDisplay").html(maxRows);
         table_ready = true;
+        
+        // Initialize spinner
+        var powerSettingSpinner = $("#powerSetting").spinner({
+          change: function(event, ui){
+            $.post('/arduino/set_power', event.target.value);
+          }
+        });
       });
 
       function refresh() {
@@ -216,6 +234,10 @@ if you use a regualr <body> without this, you get gauges with no text -->
     <div id="g1"></div>
     <div id="g2"></div>
     <div id="g3"></div>
+    <p id="powerControl">
+      <label for="powerSetting">Power (%):</label>
+      <input id="powerSetting" name="value">
+    </p>
     <hr/>
     <h2>Time series</h2>
     <div id="chart_container">
