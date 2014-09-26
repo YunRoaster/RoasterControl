@@ -2,7 +2,7 @@
 <html>
 	<head>
 	<title>YunRoaster Control Interface V 0.0d</title>
-
+   <meta charset="utf-8">
    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/rickshaw/1.4.6/rickshaw.min.css">
    <style>
       body {
@@ -86,7 +86,7 @@
       };
       var randomValitity = 0.3;
       
-      window.onload = function(){
+      $(document).ready(function(){
         g1 = new JustGage({
           id: "g1", 
           value: getRandomInt(0, 100), 
@@ -118,8 +118,7 @@
         $tableBody = $("#dataPointTable tbody");
         $("#nSampleDisplay").html(maxRows);
         table_ready = true;
-      };
-
+      });
 
       function refresh() {
         var content;
