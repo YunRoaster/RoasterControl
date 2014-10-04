@@ -81,6 +81,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     //----------
     
     
@@ -89,6 +90,10 @@
       var isTest = Boolean(window.location.search.match(/arduino/));
       
       //var isTest = Boolean(1);
+=======
+      // If url contains 'test' we're in test mode
+      var isTest = Boolean(window.location.search.match(/test/));
+>>>>>>> FETCH_HEAD
 =======
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
@@ -117,7 +122,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           
+=======
+>>>>>>> FETCH_HEAD
 =======
 >>>>>>> FETCH_HEAD
 =======
@@ -174,6 +182,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.get('/arduino/pct_pwr:' + event.target.value); 
@@ -181,6 +190,11 @@
        /*    var powerSettingSpinner = $("#powerSetting").spinner({
            change: function(event, ui){
            g1.refresh(event.target.value);   //write the new pwr setting to the gauge */
+=======
+        var powerSettingSpinner = $("#powerSetting").spinner({
+          change: function(event, ui){
+            $.post('/arduino/set_power', event.target.value);
+>>>>>>> FETCH_HEAD
 =======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
@@ -233,7 +247,11 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           content = $.get('/arduino/CSVData:' , {})
+=======
+          content = $.get('/arduino/temperature', {})
+>>>>>>> FETCH_HEAD
 =======
           content = $.get('/arduino/temperature', {})
 >>>>>>> FETCH_HEAD
@@ -264,6 +282,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
       function handleData(data_string) {
         // Format the data
@@ -293,6 +312,9 @@
 =======
 
 >>>>>>> FETCH_HEAD
+=======
+
+>>>>>>> FETCH_HEAD
       function handleData(data_string) {
         // Format the data
         // Split by commas and newlines, and remove last blank entry
@@ -313,6 +335,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> FETCH_HEAD
+=======
 >>>>>>> FETCH_HEAD
 =======
 >>>>>>> FETCH_HEAD
