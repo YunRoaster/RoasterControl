@@ -77,39 +77,21 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
     <script src="plot.js"></script>
     <script>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    //----------
-    
-    
     
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/arduino/));
       
       //var isTest = Boolean(1);
-=======
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
->>>>>>> FETCH_HEAD
-=======
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
->>>>>>> FETCH_HEAD
-=======
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
->>>>>>> FETCH_HEAD
-=======
+       // If url contains 'test' we're in test mode
+      var isTest = Boolean(window.location.search.match(/test/));
       // If url contains 'test' we're in test mode
       var isTest = Boolean(window.location.search.match(/test/));
->>>>>>> FETCH_HEAD
-=======
-      // If url contains 'test' we're in test mode
-      var isTest = Boolean(window.location.search.match(/test/));
->>>>>>> FETCH_HEAD
 
       var g1, g2, g3;
 
@@ -118,23 +100,7 @@
           table_ready = false,
           sample_num = 0,
           maxRows = 25;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-          
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-
+<
       // Config for random data
       var currentData = {
         'date': +new Date(),
@@ -178,11 +144,6 @@
         table_ready = true;
         
         // Initialize spinner
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
           var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.get('/arduino/pct_pwr:' + event.target.value); 
@@ -190,31 +151,21 @@
        /*    var powerSettingSpinner = $("#powerSetting").spinner({
            change: function(event, ui){
            g1.refresh(event.target.value);   //write the new pwr setting to the gauge */
-=======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.post('/arduino/set_power', event.target.value);
->>>>>>> FETCH_HEAD
-=======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.post('/arduino/set_power', event.target.value);
->>>>>>> FETCH_HEAD
-=======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.post('/arduino/set_power', event.target.value);
->>>>>>> FETCH_HEAD
-=======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.post('/arduino/set_power', event.target.value);
->>>>>>> FETCH_HEAD
-=======
         var powerSettingSpinner = $("#powerSetting").spinner({
           change: function(event, ui){
             $.post('/arduino/set_power', event.target.value);
->>>>>>> FETCH_HEAD
           }
         });
       });
@@ -243,29 +194,12 @@
             content.resolve(CSVdata);
           }, 0);
         } else {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
           content = $.get('/arduino/CSVData:' , {})
-=======
           content = $.get('/arduino/temperature', {})
->>>>>>> FETCH_HEAD
-=======
           content = $.get('/arduino/temperature', {})
->>>>>>> FETCH_HEAD
-=======
           content = $.get('/arduino/temperature', {})
->>>>>>> FETCH_HEAD
-=======
           content = $.get('/arduino/temperature', {})
->>>>>>> FETCH_HEAD
-=======
           content = $.get('/arduino/temperature', {})
->>>>>>> FETCH_HEAD
-        }
-        
         content.then(handleData);
       }
 
@@ -278,12 +212,22 @@
         var roundVal = Math.pow(10, ndigits);
         return Math.round(v*roundVal)/roundVal;
       }
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+      function handleData(data_string) {
+        // Format the data
+        // Split by commas and newlines, and remove last blank entry
+        var data = data_string.split(/[,\n]/);
+        data = data.slice(0, data.length - 1);
 
+        // Round values
+        data[1] = roundToPrecision(data[1]);
+        data[2] = roundToPrecision(data[2]);
+        data[3] = roundToPrecision(data[3]);
+
+        // Update gauges
+        var time = data[0];
+        g1.refresh(data[1]);
+        g2.refresh(data[2]);
+        g3.refresh(data[3]);
       function handleData(data_string) {
         // Format the data
         // Split by commas and newlines, and remove last blank entry
@@ -301,50 +245,6 @@
         g2.refresh(data[2]);
         g3.refresh(data[3]);
 
-=======
-
-=======
-
->>>>>>> FETCH_HEAD
-=======
-
->>>>>>> FETCH_HEAD
-=======
-
->>>>>>> FETCH_HEAD
-=======
-
->>>>>>> FETCH_HEAD
-      function handleData(data_string) {
-        // Format the data
-        // Split by commas and newlines, and remove last blank entry
-        var data = data_string.split(/[,\n]/);
-        data = data.slice(0, data.length - 1);
-
-        // Round values
-        data[1] = roundToPrecision(data[1]);
-        data[2] = roundToPrecision(data[2]);
-        data[3] = roundToPrecision(data[3]);
-
-        // Update gauges
-        var time = data[0];
-        g1.refresh(data[1]);
-        g2.refresh(data[2]);
-        g3.refresh(data[3]);
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
-=======
->>>>>>> FETCH_HEAD
         // Update time plot
         if(time_plot_ready) {
           time_plot.series.addData({
