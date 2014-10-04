@@ -29,6 +29,7 @@
  sketch are running but be careful not to remove it while
  the system is writing to it.
 
+
  Original example created  6 July 2013
  by Tom Igoe
  Extended in September 2014
@@ -43,20 +44,21 @@
 #include <Bridge.h>
 #include <YunServer.h>
 #include <YunClient.h>
-#include <SPI.h>
+// #include <SPI.h>
 #include "MAX6675.h"
 
-#define HEATER 5
+#define HEATER 6  // This is the red LED on the TC board, so no need for TC_LED
 #define SD_CS 10 //is this correct for the YUN?
 #define PWM_PERIOD 1667
 
 int duty_cycle = 800;
+float pct_pwr = (100 * duty_cycle) / PWM_PERIOD;
 String TCstring;
 static unsigned long start_time = millis();
 static unsigned long display_time;
 
 
-int TC_LED = 9; // Status LED Pin
+//int TC_LED = 13; // Status LED Pin
 //int CS = 10; // CS pin on MAX6675  --we use THERMOCUOPELX_CS for this
 int THERMOCOUPLE1_CS = 7;
 int THERMOCOUPLE2_CS = 8;
@@ -84,13 +86,13 @@ void slowPWM(const int duty_cycle)
     // reset everything
     next_time = 0;
     digitalWrite(HEATER, state = 0);
-    digitalWrite(TC_LED, state = 0);
+//    digitalWrite(TC_LED, state = 0);
     return;
   }
 
   if (millis() >= next_time) {
     digitalWrite(HEATER, state);
-    digitalWrite(TC_LED, state);
+//    digitalWrite(TC_LED, state);
     next_time =  millis() + (state ? duty_cycle : (PWM_PERIOD - duty_cycle));
     state = !state;
   }
@@ -105,10 +107,23 @@ String startString;
 long hits = 0;
 
 void setup() {
+
+  // Initialize Serial
+  Bridge.begin();
   Serial.begin(9600);
 
+  // Wait until a Serial Monitor is connected.
+  while (!Serial) { //fast blink LED
+    pinMode(13, OUTPUT);
+    digitalWrite(13, LOW);
+    delay(100);
+    digitalWrite(13, HIGH);
+    delay(100);
+  }
+  Serial.println("Serial Comms Initialized...\n");
 
-  pinMode (TC_LED, OUTPUT);
+
+  //pinMode (TC_LED, OUTPUT);
   pinMode (HEATER, OUTPUT);
 
   digitalWrite(HEATER, LOW);
@@ -118,7 +133,7 @@ void setup() {
   // Bridge startup
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
-  Bridge.begin();
+
   digitalWrite(13, HIGH);
 
   // using A0 and A2 as vcc and gnd for the TMP36 sensor:
@@ -141,8 +156,13 @@ void setup() {
   }
 }
 
-void loop() 
+void loop()
 {
+  /*   char carray[message.length() + 1]; //determine size of the array
+     message.toCharArray(carray, sizeof(carray)); //put readStringinto an array
+     float pct_pwr = atof(carray); //convert the array into a float
+   }
+  */
   // Get clients coming from server
   YunClient client = server.accept();
 
@@ -150,13 +170,21 @@ void loop()
   if (client)
   {
     // read the command
-    String command = client.readString();
+    //string should end with a colon even if no argument is passed
+    String command = client.readStringUntil(':');
+    String command2 = client.readString();
+
     command.trim();        //kill whitespace
-    Serial.println(command);
+    command2.trim();        //kill whitespace
+    Serial.print("Command is: ");
+    Serial.print(command);
+    Serial.print(", Command2 is: ");
+    Serial.println(command2);
+
     // is "CSVData" the command?
     if (command == "CSVData")
     {
-
+      Serial.println(" In the 'CSVData' command processor... ");
       display_time = millis() - start_time;
       int sensorValue = analogRead(A1);
       // convert the reading to millivolts:
@@ -175,7 +203,7 @@ void loop()
       //Now, write out the CSV string with Time, temp0, temp1, temp2
       client.print(display_time);
       client.print(", ");
-      client.print(temperature0);
+      client.print(pct_pwr);
       client.print(", ");
       client.print(temperature1);
       client.print(", ");
@@ -184,20 +212,12 @@ void loop()
     }
     else if (command == "temperature")
     {
+      Serial.println(" In the 'temperature' command processor... ");
       //First, we'll get/read all the data.
       //Then, write out a formatted CSV string with important variables
       //The, write out human-readable text with embedde variables
 
       // get the time from the server:
-      /* Let's get this out of the loop: maybe load it up once at initialization
-      Process time;
-      time.runShellCommand("date");
-      String timeString = "";
-      while (time.available()) {
-        char c = time.read();
-        timeString += c;
-      }
-      //Serial.println(timeString);  */
 
       display_time = millis() - start_time;
       int sensorValue = analogRead(A1);
@@ -221,51 +241,34 @@ void loop()
       client.print("<br>Current TMP36 temperature: ");
       client.print(temperature0);
       client.print(" degrees F");
-      if (temperature1 < 0)
-      {
-        // If there is an error with the TC, temperature will be < 0
-        client.print("<br>Thermocouple 1 Error on CS");
-        client.print( temperature1 );
-        client.print(" degrees F");
-        digitalWrite(TC_LED, HIGH);
-      } else
-      {
-        client.print("<br>Current TC1 Temperature: ");
-        client.print( temperature1 );
-        client.print(" degrees F");
-        digitalWrite(TC_LED, LOW);
-      }
-
-      if (temperature2 < 0)
-      {
-        // If there is an error with the TC, temperature will be < 0
-        client.print("<br>Thermocouple 2 Error on CS");
-        client.print( temperature2 );
-        client.print(" degrees F");
-        digitalWrite(TC_LED, HIGH);
-      } else
-      {
-        client.print("<br>Current TC2 Temperature: ");
-        client.print( temperature2 );
-        client.print(" degrees F");
-        digitalWrite(TC_LED, LOW);
-      }
-
-
-
-      client.print("<br>This sketch has been running since ");
-      client.print(startString);
-      client.print("<br>Hits so far: ");
-      client.print(hits);
-
+    }
+    else if (command == "pct_pwr")
+    {
+      Serial.print("... In the pct_pwr command processor ...");
+      char carray[command2.length() + 1]; //determine size of the array
+      command2.toCharArray(carray, sizeof(carray)); //put readStringinto an array
+      pct_pwr = atof(carray); //convert the array into a float
+      if (pct_pwr > 100.0 ) { pct_pwr = 100.0; }
+      duty_cycle = (pct_pwr * PWM_PERIOD) / 100.0;
+      Serial.print("Setting power to ");
+      Serial.print(pct_pwr);
+      Serial.print(" percent");
+      Serial.print(" and duty cycle to ");
+      Serial.print(duty_cycle);
+      Serial.println(" ");
 
     }
+    else
+    {
+      Serial.println(" Command unrecognized... ");
+    }
 
-    // Close connection and free resources.
-    client.stop();
-    hits++;
   }
 
+  // Close connection and free resources.
+  client.stop();
+  hits++;
+  slowPWM(duty_cycle);
   delay(50); // Poll every 50ms
 }
 
