@@ -56,6 +56,8 @@ float pct_pwr = (100 * duty_cycle) / PWM_PERIOD;
 String TCstring;
 static unsigned long start_time = millis();
 static unsigned long display_time;
+boolean serial;
+int ProcessingTime;
 
 
 //int TC_LED = 13; // Status LED Pin
@@ -86,13 +88,13 @@ void slowPWM(const int duty_cycle)
     // reset everything
     next_time = 0;
     digitalWrite(HEATER, state = 0);
-//    digitalWrite(TC_LED, state = 0);
+    //    digitalWrite(TC_LED, state = 0);
     return;
   }
 
   if (millis() >= next_time) {
     digitalWrite(HEATER, state);
-//    digitalWrite(TC_LED, state);
+    //    digitalWrite(TC_LED, state);
     next_time =  millis() + (state ? duty_cycle : (PWM_PERIOD - duty_cycle));
     state = !state;
   }
@@ -112,15 +114,20 @@ void setup() {
   Bridge.begin();
   Serial.begin(9600);
 
-  // Wait until a Serial Monitor is connected.
-  while (!Serial) { //fast blink LED
+  // Wait until two mins for Serial Monitor to connect.
+  int count = 0;
+  while ((!Serial) && (count < 100)) { //fast blink LED
     pinMode(13, OUTPUT);
     digitalWrite(13, LOW);
     delay(100);
     digitalWrite(13, HIGH);
     delay(100);
+    count = count + 1;
   }
-  Serial.println("Serial Comms Initialized...\n");
+  serial = Serial;
+  if (serial) {
+    Serial.println("Serial Comms Initialized...\n");
+  }
 
 
   //pinMode (TC_LED, OUTPUT);
@@ -169,22 +176,26 @@ void loop()
   // There is a new client?
   if (client)
   {
+    ProcessingTime = millis();
     // read the command
     //string should end with a colon even if no argument is passed
-    String command = client.readStringUntil(':');
+    String command = client.readStringUntil('?');
     String command2 = client.readString();
 
     command.trim();        //kill whitespace
     command2.trim();        //kill whitespace
-    Serial.print("Command is: ");
-    Serial.print(command);
-    Serial.print(", Command2 is: ");
-    Serial.println(command2);
+    if (serial)
+    {
+      Serial.print("Command is: ");
+      Serial.print(command);
+      Serial.print(", Command2 is: ");
+      Serial.println(command2);
+    }
 
     // is "CSVData" the command?
     if (command == "CSVData")
     {
-      Serial.println(" In the 'CSVData' command processor... ");
+      if (serial) Serial.println(" In the 'CSVData' command processor... ");
       display_time = millis() - start_time;
       int sensorValue = analogRead(A1);
       // convert the reading to millivolts:
@@ -201,6 +212,7 @@ void loop()
       temperature2 = temp2.read_temp();
 
       //Now, write out the CSV string with Time, temp0, temp1, temp2
+
       client.print(display_time);
       client.print(", ");
       client.print(pct_pwr);
@@ -212,7 +224,7 @@ void loop()
     }
     else if (command == "temperature")
     {
-      Serial.println(" In the 'temperature' command processor... ");
+      if (serial) Serial.println(" In the 'temperature' command processor... ");
       //First, we'll get/read all the data.
       //Then, write out a formatted CSV string with important variables
       //The, write out human-readable text with embedde variables
@@ -236,32 +248,41 @@ void loop()
       temperature2 = temp2.read_temp();
 
       // print the other information:
+
       client.print("Current display time ");
       client.println(display_time);
       client.print("<br>Current TMP36 temperature: ");
       client.print(temperature0);
       client.print(" degrees F");
+
     }
     else if (command == "pct_pwr")
     {
-      Serial.print("... In the pct_pwr command processor ...");
+      if (serial) Serial.print("... In the pct_pwr command processor ...");
       char carray[command2.length() + 1]; //determine size of the array
       command2.toCharArray(carray, sizeof(carray)); //put readStringinto an array
       pct_pwr = atof(carray); //convert the array into a float
-      if (pct_pwr > 100.0 ) { pct_pwr = 100.0; }
+      if (pct_pwr > 100.0 ) {
+        pct_pwr = 100.0;
+      }
       duty_cycle = (pct_pwr * PWM_PERIOD) / 100.0;
-      Serial.print("Setting power to ");
-      Serial.print(pct_pwr);
-      Serial.print(" percent");
-      Serial.print(" and duty cycle to ");
-      Serial.print(duty_cycle);
-      Serial.println(" ");
-
+      if (serial)
+      {
+        Serial.print("Setting power to ");
+        Serial.print(pct_pwr);
+        Serial.print(" percent");
+        Serial.print(" and duty cycle to ");
+        Serial.print(duty_cycle);
+        Serial.println(" ");
+      }
     }
     else
     {
       Serial.println(" Command unrecognized... ");
     }
+    
+    ProcessingTime = millis() - ProcessingTime;
+    if(serial) Serial.println(ProcessingTime);
 
   }
 
@@ -270,6 +291,7 @@ void loop()
   hits++;
   slowPWM(duty_cycle);
   delay(50); // Poll every 50ms
+
 }
 
 
